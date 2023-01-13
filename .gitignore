@@ -24,3 +24,12 @@ vis/
 model_zoo/
 model_zoo_old/
 scripts/
+all_frames/
+COCO_archery/
+boxed_frames/
+bckb_dir
+*.pid
+*.log
+*.conf
+*.json
+*.mp4

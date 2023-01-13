@@ -19,6 +19,8 @@ from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon
 from pycocotools import mask as maskUtils
 from matplotlib import transforms
+import cv2
+
 
 def renorm(img: torch.FloatTensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) \
         -> torch.FloatTensor:
@@ -84,6 +86,24 @@ class COCOVisualizer():
             os.makedirs(os.path.dirname(savename), exist_ok=True)
             plt.savefig(savename)
         plt.close()
+
+    def visualize_cv(self, img, tgt, savedir):
+        img = renorm(img).permute(1, 2, 0).numpy()
+        image = (img * 255).astype('uint8')[:, :, ::-1].copy()
+        H, W = tgt['size'].tolist() 
+        numbox = tgt['boxes'].shape[0]
+
+        color = []
+        polygons = []
+        boxes = []
+        for i, box in enumerate(tgt['boxes'].cpu()):
+            unnormbbox = box * torch.Tensor([W, H, W, H])
+            unnormbbox[:2] -= unnormbbox[2:] / 2
+            [bbox_x, bbox_y, bbox_w, bbox_h] = unnormbbox.tolist()
+            image = cv2.rectangle(image, (int(bbox_x), int(bbox_y)), (int(bbox_x + bbox_w), int(bbox_y + bbox_h)), tgt['box_color'][i], 2)
+            cv2.putText(image, tgt['box_label'][i], (int(bbox_x), int(bbox_y - 5)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, tgt['box_color'][i], 2)
+            
+        cv2.imwrite(savedir + tgt['image_name'], image)
 
     def addtgt(self, tgt):
         """
